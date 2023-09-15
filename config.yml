@@ -1,0 +1,9 @@
+services:
+  - path: "/openai/v1/chat/completions"
+    target_service: "https://api.openai.com/v1/chat/completions"
+  - path: "/openai/v1/completions"
+    target_service: "https://api.openai.com/v1/completions"
+  - path: "/openai/v1/embeddings"
+    target_service: "https://api.openai.com/v1/embeddings"
+  - path: "/openai/v1/models"
+    target_service: "https://api.openai.com/v1/models"

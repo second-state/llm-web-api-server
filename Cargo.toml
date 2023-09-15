@@ -1,0 +1,18 @@
+[package]
+name = "llm-web-api-server"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+futures = { version = "0.3.6", default-features = false, features = [
+    "async-await",
+] }
+hyper = { version = "0.14.27", features = ["full"] }
+tokio = { version = "1.32.0", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+route-recognizer = "0.2.0"
+async-trait = "0.1"
+xin = { path = "/Volumes/Dev/secondstate/me/xin" }
+hyper-rustls = "0.24.1"
+serde_yaml = "0.9"
