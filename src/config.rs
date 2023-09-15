@@ -11,6 +11,14 @@ pub struct GatewayConfig {
 pub struct ServiceConfig {
     pub path: String,
     pub target_service: String,
+    pub ty: ServiceType,
+}
+
+#[derive(Debug, PartialEq, Deserialize, Serialize, Clone)]
+#[serde(rename_all = "lowercase")]
+pub enum ServiceType {
+    Openai,
+    Llama2,
 }
 
 pub fn load_config(file_path: &str) -> GatewayConfig {
