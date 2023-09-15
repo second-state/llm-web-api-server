@@ -45,6 +45,8 @@ async fn handle_request(
     config: GatewayConfig,
 ) -> Result<Response<Body>, hyper::Error> {
     let path = req.uri().path();
+
+    // get service config
     let service_config = match get_service_config(path.clone(), &config.services) {
         Some(service_config) => service_config,
         None => {
@@ -52,6 +54,24 @@ async fn handle_request(
         }
     };
 
+    match service_config.ty {
+        config::ServiceType::Openai => handle_openai_request(req, service_config).await,
+        config::ServiceType::Llama2 => handle_llama_request(req, service_config).await,
+    }
+}
+
+async fn handle_llama_request(
+    _req: Request<Body>,
+    _service_config: &ServiceConfig,
+) -> Result<Response<Body>, hyper::Error> {
+    unimplemented!()
+}
+
+async fn handle_openai_request(
+    req: Request<Body>,
+    service_config: &ServiceConfig,
+) -> Result<Response<Body>, hyper::Error> {
+    // get openai_api_key
     let auth_token = format!(
         "Bearer {openai_api_key}",
         openai_api_key = std::env::var("OPENAI_API_KEY").unwrap()
