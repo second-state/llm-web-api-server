@@ -156,13 +156,19 @@ async fn forward_request(mut req: Request<Body>) -> Result<Response<Body>, hyper
         // dbg!(string);
     }
 
-    let conn = hyper_rustls::HttpsConnectorBuilder::new()
-        .with_native_roots()
-        .https_or_http()
-        .enable_http1()
-        .build();
+    // ! use normal `hyper_rustls` to create a https connector
+    // let https_conn = hyper_rustls::HttpsConnectorBuilder::new()
+    //     .with_native_roots()
+    //     .https_or_http()
+    //     .enable_http1()
+    //     .build();
 
-    let client = Client::builder().build::<_, hyper::Body>(conn);
+    // ! use `wasmedge_hyper_rustls` to create a https connector
+    let https_conn = wasmedge_hyper_rustls::connector::new_https_connector(
+        wasmedge_rustls_api::ClientConfig::default(),
+    );
+    
+    let client = Client::builder().build::<_, hyper::Body>(https_conn);
 
     match client.request(req).await {
         Ok(res) => Ok(res),
