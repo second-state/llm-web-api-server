@@ -994,6 +994,7 @@ checksum = "ed94fce61571a4006852b7389a063ab983c02eb1bb37b47f8272ce92d06d9538"
 [[package]]
 name = "xin"
 version = "0.1.0"
+source = "git+https://github.com/apepkuss/xin.git?branch=main#4c5c61a3435ebd90e66de3cecb06941c6aff003b"
 dependencies = [
  "serde",
 ]
