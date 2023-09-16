@@ -80,6 +80,8 @@ async fn handle_openai_request(
 
     let (parts, body) = req.into_parts();
     let downstream_req = build_downstream_request(parts, body, service_config, auth_token).await?;
+    
+    dbg!("downstream_req: {:?}", &downstream_req);
 
     match forward_request(downstream_req).await {
         Ok(res) => Ok(res),
