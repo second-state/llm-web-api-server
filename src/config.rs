@@ -19,6 +19,7 @@ pub struct ServiceConfig {
 pub enum ServiceType {
     Openai,
     Llama2,
+    Test,
 }
 
 pub fn load_config(file_path: &str) -> GatewayConfig {

@@ -57,6 +57,7 @@ async fn handle_request(
     match service_config.ty {
         config::ServiceType::Openai => handle_openai_request(req, service_config).await,
         config::ServiceType::Llama2 => handle_llama_request(req, service_config).await,
+        config::ServiceType::Test => Ok(Response::new(req.into_body())),
     }
 }
 

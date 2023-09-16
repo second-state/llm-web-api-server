@@ -23,3 +23,6 @@ services:
   - path: "/llama/v1/models"
     target_service: ""
     ty: "llama2"
+  - path: "/echo"
+    target_service: ""
+    ty: "test"
