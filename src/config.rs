@@ -4,7 +4,16 @@ use std::{fs::File, io::Read};
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct GatewayConfig {
+    #[serde(rename = "socket_address")]
+    pub socket_addr: SocketAddr,
     pub services: Vec<ServiceConfig>,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct SocketAddr {
+    #[serde(rename = "ip_address")]
+    pub ip: String,
+    pub port: String,
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
