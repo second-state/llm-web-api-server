@@ -10,6 +10,7 @@ pub(crate) async fn handle_llama_request(
 ) -> Result<Response<Body>, hyper::Error> {
     dbg!(req.uri().path());
     dbg!(&service_config);
+    dbg!(&req);
 
     match service_config.path.as_str() {
         "/llama/v1/chat/completions" => llama::llama_chat_completions_handler().await,
