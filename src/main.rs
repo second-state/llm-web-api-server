@@ -8,6 +8,9 @@ use std::net::SocketAddr;
 mod config;
 use config::{load_config, GatewayConfig, ServiceConfig};
 
+mod backend;
+use backend::ggml;
+
 // type Response = hyper::Response<hyper::Body>;
 type Error = Box<dyn std::error::Error + Send + Sync + 'static>;
 
@@ -62,9 +65,20 @@ async fn handle_request(
 }
 
 async fn handle_llama_request(
-    _req: Request<Body>,
-    _service_config: &ServiceConfig,
+    req: Request<Body>,
+    service_config: &ServiceConfig,
 ) -> Result<Response<Body>, hyper::Error> {
+    dbg!(req.uri().path());
+    dbg!(&service_config);
+
+    match service_config.path.as_str() {
+        "/llama/v1/chat/completions" => ggml::llama::llama_chat_completions_handler().await,
+        "/llama/v1/completions" => ggml::llama::llama_completions_handler().await,
+        "/llama/v1/embeddings" => ggml::llama::llama_embeddings_handler().await,
+        "/llama/v1/models" => ggml::llama::llama_models_handler().await,
+        _ => panic!("unsupported path"),
+    }
+
     unimplemented!()
 }
 
@@ -80,7 +94,7 @@ async fn handle_openai_request(
 
     let (parts, body) = req.into_parts();
     let downstream_req = build_downstream_request(parts, body, service_config, auth_token).await?;
-    
+
     dbg!("downstream_req: {:?}", &downstream_req);
 
     match forward_request(downstream_req).await {
@@ -169,7 +183,7 @@ async fn forward_request(mut req: Request<Body>) -> Result<Response<Body>, hyper
     let https_conn = wasmedge_hyper_rustls::connector::new_https_connector(
         wasmedge_rustls_api::ClientConfig::default(),
     );
-    
+
     let client = Client::builder().build::<_, hyper::Body>(https_conn);
 
     match client.request(req).await {
