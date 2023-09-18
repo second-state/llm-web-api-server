@@ -3,6 +3,7 @@
 > Note: Before reading the following content, please make sure that you are working in an environment of Ubuntu 20.04/22.04 and have installed the following necessary dependencies:
 >
 > * Rust-stable (>= 1.69.0)
+> * Add `wasm32-wasi` target to Rust toolchain by running `rustup target add wasm32-wasi` in the terminal
 > * WasmEdge 0.13.4 ([Installation](https://wasmedge.org/docs/start/install#generic-linux-and-macos))
 > * WasmEdge TLS plugin ([Installation](https://wasmedge.org/docs/start/install#tls-plug-in))
 > 
