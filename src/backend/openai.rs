@@ -26,16 +26,6 @@ pub async fn handle_openai_request(
     }
 }
 
-// fn get_service_config<'a>(path: &str, services: &'a [ServiceConfig]) -> Option<&'a ServiceConfig> {
-//     services.iter().find(|c| path.starts_with(&c.path))
-// }
-
-// fn not_found() -> Result<Response<Body>, hyper::Error> {
-//     let mut response = Response::new(Body::from("404 Not Found"));
-//     *response.status_mut() = hyper::StatusCode::NOT_FOUND;
-//     Ok(response)
-// }
-
 async fn build_downstream_request(
     parts: Parts,
     body: Body,
