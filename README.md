@@ -6,11 +6,20 @@
 > * Add `wasm32-wasi` target to Rust toolchain by running `rustup target add wasm32-wasi` in the terminal
 > * WasmEdge 0.13.4 ([Installation](https://wasmedge.org/docs/start/install#generic-linux-and-macos))
 > * WasmEdge TLS plugin ([Installation](https://wasmedge.org/docs/start/install#tls-plug-in))
-> 
 
 ## How to build and run?
 
-- First, build the `llm-web-api-server` wasm app:
+Before building the wasm app, you may set the socket address of the web API server in `config.yml`. The default socket address is:
+
+```yaml
+socket_address:
+  ip_address: "0.0.0.0"
+  port: "8080"
+```
+
+Please guarantee that the port is not occupied by other processes. Now let's build and run the web API server:
+
+* First, build the `llm-web-api-server` wasm app:
 
     ```bash
     git clone https://github.com/apepkuss/llm-web-api-server.git
@@ -23,7 +32,7 @@
 
     If the commands are successful, you should find the wasm app in `target/wasm32-wasi/release/llm-web-api-server.wasm`.
 
-- Second, to maximize the performance of the wasm app, use `WasmEdge AOT Compiler` to compile the wasm app to native code:
+* Second, to maximize the performance of the wasm app, use `WasmEdge AOT Compiler` to compile the wasm app to native code:
 
     ```bash
     wasmedge compile target/wasm32-wasi/release/llm-web-api-server.wasm llm-web-api-server.so
@@ -31,7 +40,7 @@
 
     If the command is successful, you should find `llm-web-api-server.so` in the root directory.
 
-- Finally, run the wasm app, namely starting the web API server:
+* Finally, run the wasm app, namely starting the web API server:
 
     ```bash
     wasmedge run --dir .:. llm-web-api-server.so
