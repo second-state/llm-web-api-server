@@ -18,3 +18,4 @@ hyper_wasi = { version = "0.15", features = ["full"] }
 tokio_wasi = { version = "1", features = ["full"] }
 wasmedge_hyper_rustls = "0.1.0"
 wasmedge_rustls_api = { version = "0.1.0", features = ["tokio_async"] }
+wasi-nn = { git = "https://github.com/second-state/wasmedge-wasi-nn", branch = "dm4/ggml" }
