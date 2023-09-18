@@ -23,7 +23,12 @@ pub struct AppState {
 async fn main() {
     let gateway_config = load_config("config.yml");
 
-    let addr = SocketAddr::from(([0, 0, 0, 0], 8080));
+    let socket_addr = format!(
+        "{ip}:{port}",
+        ip = gateway_config.socket_addr.ip,
+        port = gateway_config.socket_addr.port
+    );
+    let addr: SocketAddr = socket_addr.parse().unwrap();
 
     let new_service = make_service_fn(move |_| {
         let config = gateway_config.clone();
@@ -140,46 +145,8 @@ async fn build_downstream_request(
     Ok(downstream_req)
 }
 
-async fn forward_request(mut req: Request<Body>) -> Result<Response<Body>, hyper::Error> {
-    {
-        // let body_bytes = to_bytes(req.body_mut()).await?;
-        // let body: xin::chat::ChatCompletionRequest = serde_json::from_slice(&body_bytes).unwrap();
-        // let s = serde_json::to_string(&body).unwrap();
-        // dbg!(req.uri());
-        // dbg!(&s);
-
-        // let auth = format!(
-        //     "Authorization: Bearer {openai_api_key}",
-        //     openai_api_key = std::env::var("OPENAI_API_KEY").unwrap()
-        // );
-        // let output = std::process::Command::new("curl")
-        //     .args([
-        //         "https://api.openai.com/v1/chat/completions",
-        //         "-X",
-        //         "POST",
-        //         "-H",
-        //         "Content-Type: application/json",
-        //         "-H",
-        //         &auth,
-        //         "-d",
-        //         &s,
-        //     ])
-        //     .output()
-        //     .unwrap();
-        // dbg!(output.status);
-
-        // let string = String::from_utf8(output.stdout).unwrap();
-        // dbg!(string);
-    }
-
-    // ! use normal `hyper_rustls` to create a https connector
-    // let https_conn = hyper_rustls::HttpsConnectorBuilder::new()
-    //     .with_native_roots()
-    //     .https_or_http()
-    //     .enable_http1()
-    //     .build();
-
-    // ! use `wasmedge_hyper_rustls` to create a https connector
+async fn forward_request(req: Request<Body>) -> Result<Response<Body>, hyper::Error> {
+    // create a https connector
     let https_conn = wasmedge_hyper_rustls::connector::new_https_connector(
         wasmedge_rustls_api::ClientConfig::default(),
     );
