@@ -20,6 +20,13 @@ pub struct AppState {
 
 #[tokio::main(flavor = "current_thread")]
 async fn main() {
+    let args: Vec<String> = std::env::args().collect();
+    let model_name: String = match args.len() < 2 {
+        true => String::new(),
+        false => args[1].clone(),
+    };
+    let ref_model_name = std::sync::Arc::new(model_name);
+
     let gateway_config = load_config("config.yml");
 
     let socket_addr = format!(
@@ -31,10 +38,11 @@ async fn main() {
 
     let new_service = make_service_fn(move |_| {
         let config = gateway_config.clone();
+        let model_name = ref_model_name.clone();
         async {
             Ok::<_, Error>(service_fn(move |req| {
                 let config = config.clone();
-                handle_request(req, config)
+                handle_request(req, config, model_name.to_string())
             }))
         }
     });
@@ -50,11 +58,12 @@ async fn main() {
 async fn handle_request(
     req: Request<Body>,
     config: GatewayConfig,
+    model_name: impl AsRef<str>,
 ) -> Result<Response<Body>, hyper::Error> {
     let path = req.uri().path();
 
     // get service config
-    let service_config = match get_service_config(path.clone(), &config.services) {
+    let service_config = match get_service_config(path, &config.services) {
         Some(service_config) => service_config,
         None => {
             return not_found();
@@ -63,7 +72,9 @@ async fn handle_request(
 
     match service_config.ty {
         config::ServiceType::Openai => openai::handle_openai_request(req, service_config).await,
-        config::ServiceType::Llama2 => ggml::handle_llama_request(req, service_config).await,
+        config::ServiceType::Llama2 => {
+            ggml::handle_llama_request(req, service_config, model_name.as_ref()).await
+        }
         config::ServiceType::Test => Ok(Response::new(Body::from("echo test"))),
     }
 }
