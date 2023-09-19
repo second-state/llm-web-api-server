@@ -1,5 +1,4 @@
 use serde::{Deserialize, Serialize};
-use serde_yaml;
 use std::{fs::File, io::Read};
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
