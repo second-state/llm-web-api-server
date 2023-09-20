@@ -5,7 +5,7 @@ use hyper::{
 use std::net::SocketAddr;
 
 mod config;
-use config::{load_config, GatewayConfig, ServiceConfig};
+use config::{load_config, GatewayConfig, ServiceConfig, ServiceType};
 
 mod backend;
 use backend::{ggml, openai};
@@ -63,7 +63,7 @@ async fn handle_request(
     let path = req.uri().path();
 
     // get service config
-    let service_config = match get_service_config(path, &config.services) {
+    let service_config = match get_service_config(path, &config.service_type, &config.services) {
         Some(service_config) => service_config,
         None => {
             return not_found();
@@ -71,16 +71,22 @@ async fn handle_request(
     };
 
     match service_config.ty {
-        config::ServiceType::Openai => openai::handle_openai_request(req, service_config).await,
-        config::ServiceType::Llama2 => {
+        config::ServiceType::OpenAI => openai::handle_openai_request(req, service_config).await,
+        config::ServiceType::GGML_Llama2 => {
             ggml::handle_llama_request(req, service_config, model_name.as_ref()).await
         }
         config::ServiceType::Test => Ok(Response::new(Body::from("echo test"))),
     }
 }
 
-fn get_service_config<'a>(path: &str, services: &'a [ServiceConfig]) -> Option<&'a ServiceConfig> {
-    services.iter().find(|c| path.starts_with(&c.path))
+fn get_service_config<'a>(
+    path: &str,
+    service_type: &'a ServiceType,
+    services: &'a [ServiceConfig],
+) -> Option<&'a ServiceConfig> {
+    services
+        .iter()
+        .find(|c| path.starts_with(&c.path) && service_type == &c.ty)
 }
 
 fn not_found() -> Result<Response<Body>, hyper::Error> {

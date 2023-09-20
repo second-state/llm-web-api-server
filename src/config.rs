@@ -5,6 +5,7 @@ use std::{fs::File, io::Read};
 pub struct GatewayConfig {
     #[serde(rename = "socket_address")]
     pub socket_addr: SocketAddr,
+    pub service_type: ServiceType,
     pub services: Vec<ServiceConfig>,
 }
 
@@ -15,19 +16,22 @@ pub struct SocketAddr {
     pub port: String,
 }
 
+#[derive(Debug, Deserialize, Serialize, Clone, PartialEq, Eq)]
+#[allow(non_camel_case_types)]
+pub enum ServiceType {
+    #[serde(rename = "openai")]
+    OpenAI,
+    #[serde(rename = "ggml/llama2")]
+    GGML_Llama2,
+    #[serde(rename = "test")]
+    Test,
+}
+
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct ServiceConfig {
     pub path: String,
     pub target_service: String,
     pub ty: ServiceType,
-}
-
-#[derive(Debug, PartialEq, Deserialize, Serialize, Clone)]
-#[serde(rename_all = "lowercase")]
-pub enum ServiceType {
-    Openai,
-    Llama2,
-    Test,
 }
 
 pub fn load_config(file_path: &str) -> GatewayConfig {
