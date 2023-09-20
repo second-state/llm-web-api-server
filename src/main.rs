@@ -62,8 +62,6 @@ async fn handle_request(
 ) -> Result<Response<Body>, hyper::Error> {
     let path = req.uri().path();
 
-    dbg!("path: {}", path);
-
     // get service config
     let service_config = match get_service_config(path, &config.service_type, &config.services) {
         Some(service_config) => service_config,
@@ -71,7 +69,6 @@ async fn handle_request(
             return not_found();
         }
     };
-    dbg!("service_config: {:?}", service_config);
 
     match service_config.ty {
         config::ServiceType::OpenAI => openai::handle_openai_request(req, service_config).await,
@@ -87,12 +84,6 @@ fn get_service_config<'a>(
     service_type: &'a ServiceType,
     services: &'a [ServiceConfig],
 ) -> Option<&'a ServiceConfig> {
-    dbg!(
-        "[get_service_config] path: {path}, service_type: {service_type:?}",
-        path,
-        service_type
-    );
-
     if path == "/echo" {
         services.iter().find(|c| path.starts_with(&c.path))
     } else {
