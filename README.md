@@ -71,3 +71,55 @@ echo test
 ```
 
 ## Multi-turn Conversations
+
+* Download the Llama model of gguf format
+
+  ```bash
+  curl -LO https://huggingface.co/TheBloke/Llama-2-7b-Chat-GGUF/resolve/main/llama-2-7b-chat.Q5_K_M.gguf
+  ```
+
+* Start the web API server
+
+  ```bash
+  wasmedge --dir .:. --nn-preload default:GGML:CPU:llama-2-7b-chat.Q5_K_M.gguf llm-web-api-server.so default
+  ```
+
+* Download `wasmedge-web-api-client` and run the client
+
+  ```bash
+  git clone https://github.com/second-state/wasmedge-web-api-client.git
+  ```
+
+  Note that you need to update the `URL_CHAT_COMPLETIONS` static variable in the `main.rs` file to the address of the web API server.
+
+  ```bash
+  cd wasmedge-web-api-client
+
+  // build and run the client
+  cargo run
+  ```
+  
+  You will see the following output in the terminal if the command runs successfully:
+  
+  ```bash
+  Enter some text (or press Ctrl + Q to exit):
+  [Question]:
+  ```
+
+  Now you can enter your question and wait for the answe. For example:
+
+  ```bash
+  Enter some text (or press Ctrl + Q to exit):
+  [Question]:
+  what is the capital of France?
+  [answer] The capital of France is Paris.
+  [Question]:
+  what about Norway?
+  [answer] The capital of Norway is Oslo.
+  [Question]:
+  I have two apples, each costing 5 dollars. What is the total   cost of these apples?
+  [answer] The total cost of the two apples is 10 dollars.
+  [Question]:
+  What if I have 3 apples?
+  [answer] If you have 3 apples, each costing 5 dollars, the   total cost of the apples is 15 dollars.
+  ```
