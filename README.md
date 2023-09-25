@@ -46,11 +46,15 @@ Please guarantee that the port is not occupied by other processes. Now let's bui
     wasmedge run --dir .:. llm-web-api-server.so
     ```
 
-    if the command is successful, you should see the following output in the terminal:
+    if the `8080` port is available on your machine and the command is successful, you should see the following output in the terminal:
 
     ```bash
     Listening on http://0.0.0.0:8080
     ```
+    
+    Note that the command above is only used for testing. In production, you need to specify which LLM model will be used. For example, if you want to use the `llm-model` in the `llm-models` directory, you can run the following command:
+    
+    ```bash
 
 ## Test the web API server
 
@@ -65,3 +69,5 @@ If the command is successful, you should see the following output in the termina
 ```bash
 echo test
 ```
+
+## Multi-turn Conversations
