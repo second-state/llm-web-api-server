@@ -51,10 +51,8 @@ Please guarantee that the port is not occupied by other processes. Now let's bui
     ```bash
     Listening on http://0.0.0.0:8080
     ```
-    
+
     Note that the command above is only used for testing. In production, you need to specify which LLM model will be used. For example, if you want to use the `llm-model` in the `llm-models` directory, you can run the following command:
-    
-    ```bash
 
 ## Test the web API server
 
