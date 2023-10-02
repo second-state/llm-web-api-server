@@ -9,6 +9,8 @@ pub(crate) async fn handle_llama_request(
     service_config: &ServiceConfig,
     model_name: impl AsRef<str>,
 ) -> Result<Response<Body>, hyper::Error> {
+    dbg!(service_config.path.as_str());
+
     match service_config.path.as_str() {
         "/v1/chat/completions" => {
             llama::llama_chat_completions_handler(req, model_name.as_ref()).await

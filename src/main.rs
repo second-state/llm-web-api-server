@@ -70,6 +70,8 @@ async fn handle_request(
         }
     };
 
+    dbg!(service_config.ty);
+
     match service_config.ty {
         config::ServiceType::OpenAI => openai::handle_openai_request(req, service_config).await,
         config::ServiceType::GGML_Llama2 => {

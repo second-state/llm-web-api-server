@@ -21,6 +21,8 @@ pub(crate) async fn llama_chat_completions_handler(
 
     let prompt = data.messages[0].content.as_str();
 
+    dbg!(prompt);
+
     // println!("\n*** [prompt begin] ***");
     // println!("{}", prompt);
     // println!("*** [prompt end] ***\n\n");
@@ -66,7 +68,16 @@ pub(crate) async fn llama_chat_completions_handler(
 
     let buffer = infer(model_name.as_ref(), &prompt).await;
 
-    Ok(Response::new(Body::from(buffer)))
+    let response = Response::builder()
+        .header("Access-Control-Allow-Origin", "*")
+        .body(Body::from(buffer))
+        .unwrap();
+
+    Ok(response)
+
+    // let buffer = infer(model_name.as_ref(), &prompt).await;
+
+    // Ok(Response::new(Body::from(buffer)))
 }
 
 pub(crate) async fn infer(model_name: impl AsRef<str>, prompt: impl AsRef<str>) -> Vec<u8> {
