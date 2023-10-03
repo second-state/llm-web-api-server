@@ -16,7 +16,7 @@ pub struct SocketAddr {
     pub port: String,
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone, PartialEq, Eq)]
+#[derive(Debug, Deserialize, Serialize, Clone, Copy, PartialEq, Eq)]
 #[allow(non_camel_case_types)]
 pub enum ServiceType {
     #[serde(rename = "openai")]
