@@ -20,6 +20,8 @@ pub struct AppState {
 
 #[tokio::main(flavor = "current_thread")]
 async fn main() {
+    println!("============ Server Startup ============\n");
+
     let args: Vec<String> = std::env::args().collect();
     let model_name: String = match args.len() < 2 {
         true => String::new(),
@@ -60,6 +62,8 @@ async fn handle_request(
     config: GatewayConfig,
     model_name: impl AsRef<str>,
 ) -> Result<Response<Body>, hyper::Error> {
+    println!("\n============ Start of one-turn chat ============");
+
     let path = req.uri().path();
 
     // get service config
@@ -70,7 +74,7 @@ async fn handle_request(
         }
     };
 
-    dbg!(service_config.ty);
+    dbg!(service_config.ty.clone());
 
     match service_config.ty {
         config::ServiceType::OpenAI => openai::handle_openai_request(req, service_config).await,

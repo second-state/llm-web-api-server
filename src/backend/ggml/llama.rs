@@ -1,4 +1,11 @@
 use hyper::{body::to_bytes, Body, Request, Response};
+use xin::{
+    chat::{
+        ChatCompletionResponse, ChatCompletionResponseChoice, ChatCompletionResponseMessage,
+        ChatCompletionRole, ChatMessageFunctionCall, FinishReason,
+    },
+    common::Usage,
+};
 
 pub(crate) async fn llama_models_handler() -> Result<Response<Body>, hyper::Error> {
     unimplemented!("llama_models_handler not implemented")
@@ -16,12 +23,51 @@ pub(crate) async fn llama_chat_completions_handler(
     mut req: Request<Body>,
     model_name: impl AsRef<str>,
 ) -> Result<Response<Body>, hyper::Error> {
+    if req.method().eq(&hyper::http::Method::OPTIONS) {
+        println!("*** empty request, return empty response ***");
+
+        let response = Response::builder()
+            .header("Access-Control-Allow-Origin", "*")
+            .header("Access-Control-Allow-Methods", "*")
+            .header("Access-Control-Allow-Headers", "*")
+            .body(Body::empty())
+            .unwrap();
+
+        return Ok(response);
+    }
     let body_bytes = to_bytes(req.body_mut()).await?;
-    let data: xin::chat::ChatCompletionRequest = serde_json::from_slice(&body_bytes).unwrap();
 
-    let prompt = data.messages[0].content.as_str();
+    // ! debug
+    let s = std::str::from_utf8(&body_bytes).unwrap();
+    dbg!(s);
 
-    dbg!(prompt);
+    let mut chat_request: xin::chat::ChatCompletionRequest =
+        serde_json::from_slice(&body_bytes).unwrap();
+
+    dbg!(&chat_request);
+
+    // * improve prompt ======>
+    let mut system_prompt = String::new();
+    if chat_request.messages[0].role == ChatCompletionRole::System {
+        system_prompt = format!(
+            "<<SYS>>\n{content} <</SYS>>\n\n",
+            content = chat_request.messages[0].content.as_str()
+        );
+        chat_request.messages.remove(0);
+    };
+
+    let user_message = chat_request.messages[0].content.as_str().trim();
+
+    let mut prompt = String::new();
+    prompt = format!("<s>[INST] {} {} [/INST]", system_prompt, user_message,);
+
+    dbg!(&prompt);
+
+    // * <======
+
+    // let prompt = chat_request.messages[0].content.as_str();
+
+    // dbg!(prompt);
 
     // println!("\n*** [prompt begin] ***");
     // println!("{}", prompt);
@@ -67,11 +113,47 @@ pub(crate) async fn llama_chat_completions_handler(
     }
 
     let buffer = infer(model_name.as_ref(), &prompt).await;
+    let model_answer = String::from_utf8(buffer.clone()).unwrap();
+    let assistant_message = model_answer.trim();
+
+    dbg!(assistant_message);
+
+    // prepare ChatCompletionResponse
+    let chat_completion_obejct = ChatCompletionResponse {
+        id: String::new(),
+        object: String::from("chat.completion"),
+        created: std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_secs(),
+        model: chat_request.model.clone(),
+        choices: vec![ChatCompletionResponseChoice {
+            index: 0,
+            message: ChatCompletionResponseMessage {
+                role: ChatCompletionRole::Assistant,
+                content: String::from(assistant_message),
+                function_call: None,
+            },
+            finish_reason: FinishReason::stop,
+        }],
+        usage: Usage {
+            prompt_tokens: 9,
+            completion_tokens: 12,
+            total_tokens: 21,
+        },
+    };
 
     let response = Response::builder()
         .header("Access-Control-Allow-Origin", "*")
-        .body(Body::from(buffer))
+        .header("Access-Control-Allow-Methods", "*")
+        .header("Access-Control-Allow-Headers", "*")
+        // .body(Body::from(buffer))
+        .body(Body::from(
+            serde_json::to_string(&chat_completion_obejct).unwrap(),
+        ))
         .unwrap();
+
+    println!("============ End of one-turn chat ============\n\n");
 
     Ok(response)
 
@@ -101,7 +183,7 @@ pub(crate) async fn infer(model_name: impl AsRef<str>, prompt: impl AsRef<str>) 
     // println!("Executed model inference");
 
     // Retrieve the output.
-    let mut output_buffer = vec![0u8; 1000];
+    let mut output_buffer = vec![0u8; 2048];
     let size = context.get_output(0, &mut output_buffer).unwrap();
 
     output_buffer[..size].to_vec()
