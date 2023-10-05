@@ -62,8 +62,6 @@ async fn handle_request(
     config: GatewayConfig,
     model_name: impl AsRef<str>,
 ) -> Result<Response<Body>, hyper::Error> {
-    println!("\n============ Start of one-turn chat ============");
-
     let path = req.uri().path();
 
     // get service config
