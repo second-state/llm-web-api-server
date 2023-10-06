@@ -10,8 +10,11 @@ use config::{load_config, GatewayConfig, ServiceConfig, ServiceType};
 mod backend;
 use backend::{ggml, openai};
 
-// type Response = hyper::Response<hyper::Body>;
+mod error;
+
 type Error = Box<dyn std::error::Error + Send + Sync + 'static>;
+
+const SOCKET_ADDRESS: &str = "0.0.0.0:8080";
 
 #[derive(Clone, Debug)]
 pub struct AppState {
@@ -20,7 +23,7 @@ pub struct AppState {
 
 #[tokio::main(flavor = "current_thread")]
 async fn main() {
-    println!("============ Server Startup ============\n");
+    println!("[SERVER] Starting server ...");
 
     let args: Vec<String> = std::env::args().collect();
     let model_name: String = match args.len() < 2 {
@@ -31,11 +34,12 @@ async fn main() {
 
     let gateway_config = load_config("config.yml");
 
-    let socket_addr = format!(
-        "{ip}:{port}",
-        ip = gateway_config.socket_addr.ip,
-        port = gateway_config.socket_addr.port
-    );
+    // let socket_addr = format!(
+    //     "{ip}:{port}",
+    //     ip = gateway_config.socket_addr.ip,
+    //     port = gateway_config.socket_addr.port
+    // );
+    let socket_addr = String::from(SOCKET_ADDRESS);
     let addr: SocketAddr = socket_addr.parse().unwrap();
 
     let new_service = make_service_fn(move |_| {
@@ -51,7 +55,7 @@ async fn main() {
 
     let server = Server::bind(&addr).serve(new_service);
 
-    println!("Listening on http://{}", addr);
+    println!("[SERVER] Listening on http://{}", addr);
     if let Err(e) = server.await {
         eprintln!("server error: {}", e);
     }
@@ -68,11 +72,11 @@ async fn handle_request(
     let service_config = match get_service_config(path, &config.service_type, &config.services) {
         Some(service_config) => service_config,
         None => {
-            return not_found();
+            return error::not_found();
         }
     };
 
-    // dbg!(service_config.ty.clone());
+    // dbg!("The service type is {:?}", service_config.ty);
 
     match service_config.ty {
         config::ServiceType::OpenAI => openai::handle_openai_request(req, service_config).await,
@@ -95,10 +99,4 @@ fn get_service_config<'a>(
             .iter()
             .find(|c| path.starts_with(&c.path) && service_type == &c.ty)
     }
-}
-
-fn not_found() -> Result<Response<Body>, hyper::Error> {
-    let mut response = Response::new(Body::from("404 Not Found"));
-    *response.status_mut() = hyper::StatusCode::NOT_FOUND;
-    Ok(response)
 }
