@@ -1,3 +1,4 @@
+use crate::error;
 use hyper::{body::to_bytes, Body, Request, Response};
 use xin::{
     chat::{
@@ -8,25 +9,26 @@ use xin::{
 };
 
 pub(crate) async fn llama_models_handler() -> Result<Response<Body>, hyper::Error> {
-    unimplemented!("llama_models_handler not implemented")
+    println!("llama_models_handler not implemented");
+    error::not_implemented()
 }
 
 pub(crate) async fn llama_embeddings_handler() -> Result<Response<Body>, hyper::Error> {
-    unimplemented!("llama_embeddings_handler not implemented")
+    println!("llama_embeddings_handler not implemented");
+    error::not_implemented()
 }
 
 pub(crate) async fn llama_completions_handler() -> Result<Response<Body>, hyper::Error> {
-    unimplemented!("llama_completions_handler not implemented")
+    println!("llama_completions_handler not implemented");
+    error::not_implemented()
 }
 
 pub(crate) async fn llama_chat_completions_handler(
     mut req: Request<Body>,
     model_name: impl AsRef<str>,
 ) -> Result<Response<Body>, hyper::Error> {
-    println!("\n============ Start of one-turn chat ============\n");
-
     if req.method().eq(&hyper::http::Method::OPTIONS) {
-        println!("*** empty request, return empty response ***");
+        println!("[CHAT] Empty request received! Returns empty response!");
 
         let response = Response::builder()
             .header("Access-Control-Allow-Origin", "*")
@@ -38,6 +40,8 @@ pub(crate) async fn llama_chat_completions_handler(
         return Ok(response);
     }
 
+    println!("[CHAT] New chat begins ...");
+
     // parse request
     let body_bytes = to_bytes(req.body_mut()).await?;
     let mut chat_request: xin::chat::ChatCompletionRequest =
@@ -46,13 +50,18 @@ pub(crate) async fn llama_chat_completions_handler(
     // build prompt
     let prompt = build_prompt(chat_request.messages.as_mut());
 
+    // run inference
     let buffer = infer(model_name.as_ref(), prompt.trim()).await;
+
+    // convert inference result to string
     let model_answer = String::from_utf8(buffer.clone()).unwrap();
     let assistant_message = model_answer.trim();
 
-    dbg!(assistant_message);
+    println!("[CHAT] Bot answer: {}", assistant_message);
 
-    // prepare ChatCompletionResponse
+    println!("[CHAT] New chat ends.");
+
+    // create ChatCompletionResponse
     let chat_completion_obejct = ChatCompletionResponse {
         id: String::new(),
         object: String::from("chat.completion"),
@@ -77,21 +86,21 @@ pub(crate) async fn llama_chat_completions_handler(
         },
     };
 
-    let response = Response::builder()
+    // return response
+    let result = Response::builder()
         .header("Access-Control-Allow-Origin", "*")
         .header("Access-Control-Allow-Methods", "*")
         .header("Access-Control-Allow-Headers", "*")
-        // .body(Body::from(buffer))
         .body(Body::from(
             serde_json::to_string(&chat_completion_obejct).unwrap(),
-        ))
-        .unwrap();
-
-    println!("============ End of one-turn chat ============\n\n");
-
-    Ok(response)
+        ));
+    match result {
+        Ok(response) => Ok(response),
+        Err(e) => error::internal_server_error(Some(e)),
+    }
 }
 
+/// Compose the prompt from the chat history.
 fn build_prompt(messages: &mut Vec<ChatCompletionRequestMessage>) -> String {
     if messages.len() == 0 {
         return String::new();
@@ -107,7 +116,7 @@ fn build_prompt(messages: &mut Vec<ChatCompletionRequestMessage>) -> String {
 
     assert!(messages.len() >= 1);
 
-    // process the chat history
+    // Process the chat history
     for message in messages {
         if message.role == ChatCompletionRole::User {
             prompt = create_user_prompt(&prompt, &system_prompt, message.content.as_str());
