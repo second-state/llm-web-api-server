@@ -41,7 +41,13 @@ async fn main() {
     //     port = gateway_config.socket_addr.port
     // );
     let socket_addr = String::from(SOCKET_ADDRESS);
-    let addr: SocketAddr = socket_addr.parse().unwrap();
+    let addr: SocketAddr = match socket_addr.parse() {
+        Ok(addr) => addr,
+        Err(e) => {
+            eprintln!("[SERVER] Invalid socket address: {}", e);
+            return;
+        }
+    };
 
     let new_service = make_service_fn(move |_| {
         let config = gateway_config.clone();
@@ -58,7 +64,7 @@ async fn main() {
 
     println!("[SERVER] Listening on http://{}", addr);
     if let Err(e) = server.await {
-        eprintln!("server error: {}", e);
+        eprintln!("[SERVER] Failed to start up: {}", e);
     }
 }
 
