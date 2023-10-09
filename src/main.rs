@@ -34,6 +34,7 @@ async fn main() {
 
     let gateway_config = load_config("config.yml");
 
+    // ! todo: read socket address from config file or command line arguments
     // let socket_addr = format!(
     //     "{ip}:{port}",
     //     ip = gateway_config.socket_addr.ip,

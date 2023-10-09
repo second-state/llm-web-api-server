@@ -24,6 +24,7 @@ pub(crate) async fn llama_completions_handler() -> Result<Response<Body>, hyper:
     error::not_implemented()
 }
 
+/// Processes a chat-completion request and returns a chat-completion response with the answer from the model.
 pub(crate) async fn llama_chat_completions_handler(
     mut req: Request<Body>,
     model_name: impl AsRef<str>,
@@ -48,6 +49,7 @@ pub(crate) async fn llama_chat_completions_handler(
     let mut chat_request: xin::chat::ChatCompletionRequest =
         serde_json::from_slice(&body_bytes).unwrap();
 
+    // ! todo: according to the model name in the request, dynamically build the prompt
     // build prompt
     let prompt = match prompt::llama::Llama2ChatPrompt::build(chat_request.messages.as_mut()) {
         Ok(prompt) => prompt,
@@ -107,6 +109,7 @@ pub(crate) async fn llama_chat_completions_handler(
     }
 }
 
+/// Runs inference on the model with the given name and returns the output.
 pub(crate) async fn infer(model_name: impl AsRef<str>, prompt: impl AsRef<str>) -> Vec<u8> {
     let graph =
         wasi_nn::GraphBuilder::new(wasi_nn::GraphEncoding::Ggml, wasi_nn::ExecutionTarget::CPU)
