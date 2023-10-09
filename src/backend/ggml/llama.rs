@@ -54,7 +54,26 @@ pub(crate) async fn llama_chat_completions_handler(
         serde_json::from_slice(&body_bytes).unwrap();
 
     // ! todo: according to the model name in the request, dynamically build the prompt
-    // build prompt
+    // * build prompt for codellama
+    // let prompt = match prompt::llama::CodeLlamaInstructPrompt::build(chat_request.messages.as_mut())
+    // {
+    //     Ok(prompt) => prompt,
+    //     Err(e) => {
+    //         return error::internal_server_error(e.to_string());
+    //     }
+    // };
+    // * build prompt for mistral
+    // if chat_request.messages[0].role == ChatCompletionRole::System {
+    //     chat_request.messages.remove(0);
+    // }
+    // let prompt = match prompt::mistral::MistralInstructPrompt::build(chat_request.messages.as_mut())
+    // {
+    //     Ok(prompt) => prompt,
+    //     Err(e) => {
+    //         return error::internal_server_error(e.to_string());
+    //     }
+    // };
+    // * build prompt for llama2chat
     let prompt = match prompt::llama::Llama2ChatPrompt::build(chat_request.messages.as_mut()) {
         Ok(prompt) => prompt,
         Err(e) => {
