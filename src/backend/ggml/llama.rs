@@ -1,9 +1,10 @@
 use crate::error;
 use hyper::{body::to_bytes, Body, Request, Response};
+use prompt::BuildPrompt;
 use xin::{
     chat::{
-        ChatCompletionRequestMessage, ChatCompletionResponse, ChatCompletionResponseChoice,
-        ChatCompletionResponseMessage, ChatCompletionRole, FinishReason,
+        ChatCompletionResponse, ChatCompletionResponseChoice, ChatCompletionResponseMessage,
+        ChatCompletionRole, FinishReason,
     },
     common::Usage,
 };
@@ -48,7 +49,13 @@ pub(crate) async fn llama_chat_completions_handler(
         serde_json::from_slice(&body_bytes).unwrap();
 
     // build prompt
-    let prompt = build_prompt(chat_request.messages.as_mut());
+    let prompt = match prompt::llama::Llama2ChatPrompt::build(chat_request.messages.as_mut()) {
+        Ok(prompt) => prompt,
+        Err(e) => {
+            let err_msg = format!("{}", e);
+            return error::internal_server_error(err_msg);
+        }
+    };
 
     // run inference
     let buffer = infer(model_name.as_ref(), prompt.trim()).await;
@@ -96,77 +103,8 @@ pub(crate) async fn llama_chat_completions_handler(
         ));
     match result {
         Ok(response) => Ok(response),
-        Err(e) => error::internal_server_error(Some(e)),
+        Err(e) => error::internal_server_error(e.to_string()),
     }
-}
-
-/// Compose the prompt from the chat history.
-fn build_prompt(messages: &mut Vec<ChatCompletionRequestMessage>) -> String {
-    if messages.len() == 0 {
-        return String::new();
-    }
-
-    let system_message = messages.remove(0);
-    let _system_prompt = create_system_prompt(&system_message);
-
-    // ! debug
-    let system_prompt = String::from("<<SYS>>\nYou are a helpful, respectful and honest assistant. Always answer as short as possible, while being safe. <</SYS>>");
-
-    let mut prompt = String::new();
-
-    assert!(messages.len() >= 1);
-
-    // Process the chat history
-    for message in messages {
-        if message.role == ChatCompletionRole::User {
-            prompt = create_user_prompt(&prompt, &system_prompt, message.content.as_str());
-        } else if message.role == ChatCompletionRole::Assistant {
-            prompt = create_assistant_prompt(&prompt, message.content.as_str());
-        }
-    }
-
-    println!("*** [prompt begin] ***");
-    println!("{}", &prompt);
-    println!("*** [prompt end] ***");
-
-    prompt
-}
-
-/// Create a system prompt from a chat completion request message.
-fn create_system_prompt(system_message: &ChatCompletionRequestMessage) -> String {
-    format!(
-        "<<SYS>>\n{content} <</SYS>>",
-        content = system_message.content.as_str()
-    )
-}
-
-/// Create a user prompt from a chat completion request message.
-fn create_user_prompt(
-    chat_history: impl AsRef<str>,
-    system_prompt: impl AsRef<str>,
-    content: impl AsRef<str>,
-) -> String {
-    match chat_history.as_ref().is_empty() {
-        true => format!(
-            "<s>[INST] {system_prompt}\n\n{user_message} [/INST]",
-            system_prompt = system_prompt.as_ref(),
-            user_message = content.as_ref().trim(),
-        ),
-        false => format!(
-            "{chat_history}<s>[INST] {user_message} [/INST]",
-            chat_history = chat_history.as_ref(),
-            user_message = content.as_ref().trim(),
-        ),
-    }
-}
-
-/// create an assistant prompt from a chat completion request message.
-fn create_assistant_prompt(chat_history: impl AsRef<str>, content: impl AsRef<str>) -> String {
-    format!(
-        "{prompt} {assistant_message} </s>",
-        prompt = chat_history.as_ref(),
-        assistant_message = content.as_ref().trim(),
-    )
 }
 
 pub(crate) async fn infer(model_name: impl AsRef<str>, prompt: impl AsRef<str>) -> Vec<u8> {
