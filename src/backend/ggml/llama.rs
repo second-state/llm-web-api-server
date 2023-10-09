@@ -32,14 +32,18 @@ pub(crate) async fn llama_chat_completions_handler(
     if req.method().eq(&hyper::http::Method::OPTIONS) {
         println!("[CHAT] Empty request received! Returns empty response!");
 
-        let response = Response::builder()
+        let result = Response::builder()
             .header("Access-Control-Allow-Origin", "*")
             .header("Access-Control-Allow-Methods", "*")
             .header("Access-Control-Allow-Headers", "*")
-            .body(Body::empty())
-            .unwrap();
+            .body(Body::empty());
 
-        return Ok(response);
+        match result {
+            Ok(response) => return Ok(response),
+            Err(e) => {
+                return error::internal_server_error(e.to_string());
+            }
+        }
     }
 
     println!("[CHAT] New chat begins ...");
@@ -54,8 +58,7 @@ pub(crate) async fn llama_chat_completions_handler(
     let prompt = match prompt::llama::Llama2ChatPrompt::build(chat_request.messages.as_mut()) {
         Ok(prompt) => prompt,
         Err(e) => {
-            let err_msg = format!("{}", e);
-            return error::internal_server_error(err_msg);
+            return error::internal_server_error(e.to_string());
         }
     };
 
