@@ -12,14 +12,11 @@ pub(crate) fn not_implemented() -> Result<Response<Body>, hyper::Error> {
     Ok(response)
 }
 
-pub(crate) fn internal_server_error(
-    error: Option<hyper::http::Error>,
-) -> Result<Response<Body>, hyper::Error> {
-    let err_msg = match error {
-        Some(e) => format!("500 Internal Server Error: {}", e),
-        None => "500 Internal Server Error".to_string(),
+pub(crate) fn internal_server_error(msg: impl AsRef<str>) -> Result<Response<Body>, hyper::Error> {
+    let err_msg = match msg.as_ref().is_empty() {
+        true => format!("500 Internal Server Error"),
+        false => format!("500 Internal Server Error: {}", msg.as_ref()),
     };
-
     let mut response = Response::new(Body::from(err_msg));
     *response.status_mut() = hyper::StatusCode::INTERNAL_SERVER_ERROR;
     Ok(response)
