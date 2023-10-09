@@ -352,6 +352,7 @@ version = "0.1.0"
 dependencies = [
  "futures",
  "hyper_wasi",
+ "prompt",
  "serde",
  "serde_json",
  "serde_yaml",
@@ -471,6 +472,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3d433d9f1a3e8c1263d9456598b16fec66f4acc9a74dacffd35c7bb09b3a1328"
 dependencies = [
  "unicode-ident",
+]
+
+[[package]]
+name = "prompt"
+version = "0.1.0"
+source = "git+https://github.com/apepkuss/prompt.git?branch=main#4490826666a265d619954f21006b1528bfc64bb1"
+dependencies = [
+ "thiserror",
+ "xin",
 ]
 
 [[package]]
