@@ -155,6 +155,5 @@ pub(crate) async fn infer(model_name: impl AsRef<str>, prompt: impl AsRef<str>) 
     // Retrieve the output.
     let mut output_buffer = vec![0u8; 2048];
     let size = context.get_output(0, &mut output_buffer).unwrap();
-
     output_buffer[..size].to_vec()
 }
